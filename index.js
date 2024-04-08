@@ -1,8 +1,17 @@
 const {MongoClient} = require("mongodb")
 const WebSocket = require('ws')
+const http = require('http');
+const cors = require('cors');
+const express = require('express')
 const uri = "mongodb+srv://Mustafalou:Yilmaz98@cluster0.wirg0db.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 const client = new MongoClient(uri)
-const wss = new WebSocket.Server({port:7071})
+
+const app = express()
+const server = http.createServer(app)
+const wss = new WebSocket.Server({server})
+
+app.use(cors())
+
 const clients = new Map()
 
 wss.on('connection', (ws)=>{
@@ -10,12 +19,13 @@ wss.on('connection', (ws)=>{
     const color = Math.floor(Math.random() * 360)
     const metadata = { id, color }
     clients.set(ws, metadata)
+    console.log(id)
     ws.on('message', async (msg)=>{
         const message = JSON.parse(msg)
         const metadata = clients.get(ws)
         message.sender = metadata.id
         message.color = metadata.color
-        console.log("messsage received : ", message)
+        //console.log("messsage received : ", message)
         if (message.topic == "client1"){
             const object = message.payload
             const database = client.db("Technivor_Data")
@@ -35,4 +45,7 @@ function uuidv4() {
         return v.toString(16);
     });
 }
-console.log("wss up")
+
+server.listen(7071, ()=>{
+    console.log('Server is running on port 7071')
+})
