@@ -25,13 +25,23 @@ wss.on('connection', (ws)=>{
         const metadata = clients.get(ws)
         message.sender = metadata.id
         message.color = metadata.color
-        //console.log("messsage received : ", message)
+        console.log("messsage received : ", message)
         if (message.topic == "client1"){
+            await client.connect();
             const object = message.payload
             const database = client.db("Technivor_Data")
             const client1 = database.collection("Client1")
             console.log(object)
             await client1.insertOne(object)
+            client.close()
+        }
+        if (message.topic == "askData"){
+            await client.connect();
+            const database = client.db("Technivor_Data");
+            const client1 = database.collection("Client1");
+            const documents = await client1.find({}).toArray();
+            ws.send(JSON.stringify(documents))
+            client.close()
         }
     })
     ws.on("close", ()=>{
